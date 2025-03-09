@@ -2,20 +2,20 @@ import { useState } from 'react';
 import { LoadingSpinner } from '../../shared/components';
 import { IssueList } from '../components/IssueList';
 import { LabelPicker } from '../components/LabelPicker';
-import { useIssues } from '../hooks';
 import { State } from '../interfaces';
+import { useIssuesInfinite } from '../hooks/useIssuesInfinite';
 
-export const ListView = () => {
+export const ListViewInfinite = () => {
 
   const [issueState, setIssueState] = useState(State.All)
   const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
 
-  const { issuesQuery, page, nextPage, prevPage } = useIssues({
+  const { issuesQuery } = useIssuesInfinite({
     state: issueState,
     selectedLabels: selectedLabels,
   });
 
-  const issues = issuesQuery.data ?? [];
+  const issues = issuesQuery.data?.pages.flat() ?? [];
 
   const onLabelSelected = (label: string) => {
 
@@ -35,20 +35,21 @@ export const ListView = () => {
           issuesQuery.isLoading
             ? <LoadingSpinner />
             :
-            <>
+            <div className='flex flex-col justify-center'>
 
               <IssueList issueList={issues} onStateChange={setIssueState} selectedState={issueState} />
 
-              <div className='flex justify-between items-center'>
-                <button onClick={prevPage} className='p-2 bg-blue-500 rounded-md hover:bg-blue-700 transition-all'>
-                  Anteriores
-                </button>
-                <span>{page}</span>
-                <button onClick={nextPage} className='p-2 bg-blue-500 rounded-md hover:bg-blue-700 transition-all'>
-                  Siguientes
-                </button>
-              </div>
-            </>
+              <button
+                disabled={issuesQuery.isFetchingNextPage}
+                onClick={() => issuesQuery.fetchNextPage()}
+                className='p-2 bg-blue-500 rounded-md hover:bg-blue-700 transition-all disabled:bg-gray-500'>
+                {issuesQuery.isFetchingNextPage
+                  ? 'Cargando mas...'
+                  : 'Cargar mas...'
+                }
+
+              </button>
+            </div>
 
         }
 

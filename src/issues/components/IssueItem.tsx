@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { GithubIssue, State } from '../interfaces/issues';
 import { useQueryClient } from '@tanstack/react-query';
 import { getIssue, getIssueComments } from '../actions';
+import { timeSince } from '../../helpers/time-since';
 
 interface Props {
   issue: GithubIssue
@@ -14,7 +15,7 @@ export const IssueItem = ({ issue }: Props) => {
   const queryClient = useQueryClient();
 
   const prefetchData = () => {
-    console.log('prefetching');
+    // console.log('prefetching');
 
     queryClient.prefetchQuery({
       queryKey: ['issue', issue.number],
@@ -23,16 +24,28 @@ export const IssueItem = ({ issue }: Props) => {
     });
 
     queryClient.prefetchQuery({
-        queryKey: ['issue', issue.number, 'comments'],
-        queryFn: () => getIssueComments(issue.number),
-        staleTime: 1000 * 60,
+      queryKey: ['issue', issue.number, 'comments'],
+      queryFn: () => getIssueComments(issue.number),
+      staleTime: 1000 * 60,
     })
 
   }
 
+  // const presetData = () => {
+  //   queryClient.setQueryData(
+  //     ['issue', issue.number],
+  //     issue,
+  //     {
+  //       updatedAt: Date.now() + (1000 * 60)
+  //     }
+  //   )
+
+  // }
+
   return (
     <div
       onMouseEnter={prefetchData}
+      // onMouseEnter={presetData}
       className=" animate-fadeIn flex items-center px-2 py-3 mb-5 border rounded-md bg-slate-900 hover:bg-slate-800">
 
       {
@@ -50,9 +63,23 @@ export const IssueItem = ({ issue }: Props) => {
         </a>
         <span className="text-gray-500">
           {/* TODO:  days ago */}
-          {issue.number} opened 2 days ago by{' '}
+          {issue.number} opened { timeSince(issue.created_at) } ago by {' '}
           <span className="font-bold">{issue.user.login}</span>
         </span>
+
+        <div className='flex flex-wrap'>
+          {
+            issue.labels.map((label) => (
+              <span
+                key={label.id}
+                className='px-2 mr-2 my-1 py-1 text-xs text-white rounded-md'
+                style={{
+                  border: `1px solid #${label.color}`
+                }}
+              >{label.name}</span>
+            ))
+          }
+        </div>
       </div>
 
       <img
